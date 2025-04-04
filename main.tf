@@ -22,6 +22,7 @@ resource "aws_vpc" "vpc_1" {
 
   tags = {
     Name = "${var.prefix}-vpc-1"
+    Team = var.team_tag
   }
 }
 
@@ -33,6 +34,7 @@ resource "aws_subnet" "subnet_1" {
 
   tags = {
     Name = "${var.prefix}-subnet-1"
+    Team = var.team_tag
   }
 }
 
@@ -44,6 +46,7 @@ resource "aws_subnet" "subnet_2" {
 
   tags = {
     Name = "${var.prefix}-subnet-2"
+    Team = var.team_tag
   }
 }
 
@@ -55,6 +58,7 @@ resource "aws_subnet" "subnet_3" {
 
   tags = {
     Name = "${var.prefix}-subnet-3"
+    Team = var.team_tag
   }
 }
 
@@ -66,6 +70,7 @@ resource "aws_subnet" "subnet_4" {
 
   tags = {
     Name = "${var.prefix}-subnet-4"
+    Team = var.team_tag
   }
 }
 
@@ -74,6 +79,7 @@ resource "aws_internet_gateway" "igw_1" {
 
   tags = {
     Name = "${var.prefix}-igw-1"
+    Team = var.team_tag
   }
 }
 
@@ -87,6 +93,7 @@ resource "aws_route_table" "rt_1" {
 
   tags = {
     Name = "${var.prefix}-rt-1"
+    Team = var.team_tag
   }
 }
 
@@ -131,6 +138,7 @@ resource "aws_security_group" "sg_1" {
 
   tags = {
     Name = "${var.prefix}-sg-1"
+    Team = var.team_tag
   }
 }
 
@@ -156,6 +164,11 @@ resource "aws_iam_role" "ec2_role_1" {
     ]
   }
   EOF
+
+  tags = {
+    Name = "${var.prefix}-ec2-role-1"
+    Team = var.team_tag
+  }
 }
 
 # EC2 역할에 AmazonS3FullAccess 정책을 부착
@@ -174,6 +187,11 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
 resource "aws_iam_instance_profile" "instance_profile_1" {
   name = "${var.prefix}-instance-profile-1"
   role = aws_iam_role.ec2_role_1.name
+
+  tags = {
+    Name = "${var.prefix}-instance-profile-1"
+    Team = var.team_tag
+  }
 }
 
 locals {
@@ -239,7 +257,7 @@ defaults
 
 frontend http_front
     bind *:80
-    acl host_app1 hdr_beg(host) -i api.glog.oa.gg
+    acl host_app1 hdr_beg(host) -i ${var.app_1_domain}
 
     use_backend http_back_1 if host_app1
 
@@ -301,7 +319,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'lldjlocal'@'127.0.0.1';
 GRANT ALL PRIVILEGES ON *.* TO 'lldjlocal'@'172.18.%.%';
 GRANT ALL PRIVILEGES ON *.* TO 'lldj'@'%';
 
-CREATE DATABASE dementor_prod;
+CREATE DATABASE ${var.app_1_db_name};
 
 FLUSH PRIVILEGES;
 "
@@ -356,12 +374,13 @@ resource "aws_instance" "ec2_1" {
   # 인스턴스에 태그 설정
   tags = {
     Name = "${var.prefix}-ec2-1"
+    Team = var.team_tag
   }
 
   # 루트 볼륨 설정
   root_block_device {
     volume_type = "gp3"
-    volume_size = 12 # 볼륨 크기를 12GB로 설정
+    volume_size = 30 # 볼륨 크기를 12GB로 설정
   }
 
   user_data = <<-EOF
